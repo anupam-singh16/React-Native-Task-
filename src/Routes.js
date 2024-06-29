@@ -15,7 +15,7 @@ const Routes = ({navigation}) => {
           name="UserDetails"
           component={UserDetails}
           options={{
-            title: 'Home',
+            title: 'User Detail Page',
             headerStyle: {
               backgroundColor: '#9B59B6',
             },

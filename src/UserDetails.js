@@ -1,34 +1,78 @@
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import {View, Text, Image, StyleSheet, ActivityIndicator, ScrollView} from 'react-native';
 
 import {useRoute} from '@react-navigation/native';
 
 const ProductDetailsPage = () => {
   const routes = useRoute();
+
   const {userData} = routes?.params;
-  // console.log(userData, 'param id ');
+
+  //*************this function  change api date in proper Date formate *************//
+  const formatDate = dateString => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    return `${year}-${month.toString().padStart(2, '0')}-${day
+      .toString()
+      .padStart(2, '0')}`;
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Image source={{uri: userData?.picture?.large}} style={styles.image} />
-      <Text style={styles.title}>{userData?.name?.first}</Text>
-      <Text style={styles.description}>{userData?.email}</Text>
-      <Text style={styles.description}>{userData?.location?.street?.name}</Text>
+    <ScrollView>
+      {userData ? (
+        <View style={styles.container}>
+          <Image
+            source={{uri: userData?.picture?.large}}
+            style={styles.image}
+          />
+          <Text style={styles.title}>
+            Name : {userData?.name?.title} {userData?.name?.first}
+          </Text>
+          <Text style={styles.description}> Email : {userData?.email}</Text>
+          <Text style={styles.description}> Gender : {userData?.gender}</Text>
+
+          <Text style={styles.description}>
+            {' '}
+            Dob : {formatDate(userData?.dob?.date)}
+          </Text>
+          <Text style={styles.description}> Age : {userData?.dob?.age}</Text>
+
+          <Text style={styles.description}>
+            Address : {userData?.location?.street?.name}
+          </Text>
+          <Text style={styles.description}>
+            City : {userData?.location?.city}
+          </Text>
+          <Text style={styles.description}>
+            State : {userData?.location?.state}
+          </Text>
+
+          <Text style={styles.description}>
+            country : {userData?.location?.country}
+          </Text>
+
+          <Text style={styles.description}>
+            Postcode : {userData?.location?.postcode}
+          </Text>
+        </View>
+      ) : (
+        <ActivityIndicator size="large" />
+      )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#f5f5f5',
     width: '100%',
+    height: '80%',
+    marginTop:60
   },
   image: {
     width: '100%',

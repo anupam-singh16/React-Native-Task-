@@ -14,48 +14,44 @@ import axios from 'axios';
 import {Image} from 'react-native-elements';
 
 import {useDispatch, useSelector} from 'react-redux';
-import {
-  fetchUsers,
-  selectAllUsers,
-  selectUserStatus,
-  selectError,
-} from './store/userSlice';
+import {fetchUsers} from './store/userSlice';
 
 const UserList = ({navigation}) => {
+  const dispatch = useDispatch();
+
+  //******   get state from redux   ********//
+  const userSlice = useSelector(state => state?.users);
+  const {status, users, error} = userSlice;
+
+  console.log(users?.length, user?.length,'users');
+
   const [user, setUsers] = useState([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const retryFunction = async () => {
     setRefreshing(true);
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
     dispatch(fetchUsers(page));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     setRefreshing(false);
   };
- 
-
-
-  const dispatch = useDispatch();
-
-  const userSlice = useSelector(state => state?.users);
-  const {status, users, error} = userSlice;
 
   useEffect(() => {
-    setUsers(page === 1 ? user : [...user, ...users]);
+    setUsers(page === 1 ? users : [...user, ...users]);
   }, [users]);
 
-  console.log(error, status, page, user?.length, 'users');
-
+  //*******  call fetchUsers When component will mount **********//
   useEffect(() => {
     dispatch(fetchUsers(page));
   }, [page]);
 
+  //******* handle infinite scrolling *********//
   const handleLoadMore = () => {
     setPage(prevPage => prevPage + 1);
   };
 
+  //******* this function is for pull to refresh **********//
   const handleRefresh = useCallback(() => {
     setUsers(users);
     setRefreshing(true);
@@ -67,16 +63,10 @@ const UserList = ({navigation}) => {
     navigation.navigate('UserDetails', {userData: data});
   };
 
-
-
-  
-
   const renderItem = ({item}) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => {
-        naviagteToDetailsPage(item || item?.login?.uuid);
-      }}>
+      onPress={() => naviagteToDetailsPage(item)}>
       <Image source={{uri: item.picture?.large}} style={styles.image} />
       <View style={styles.cardBody}>
         <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
@@ -105,21 +95,27 @@ const UserList = ({navigation}) => {
     );
   };
 
+  
+
   return (
     <SafeAreaView style={styles.container}>
       {status === 'failed' ? (
-    
-
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={retryFunction} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+        !refreshing ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              onPress={retryFunction}
+              style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ActivityIndicator size="large" />
+        )
+      ) : users?.length > 0 || user?.length > 0? (
         <FlatList
           data={user}
-          renderItem={renderItem}
+          renderItem={ renderItem}
           keyExtractor={item => item.login.uuid}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -128,6 +124,10 @@ const UserList = ({navigation}) => {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
         />
+      ) : (
+        <View style={styles.footer}>
+          <ActivityIndicator size="large" />
+        </View>
       )}
     </SafeAreaView>
   );
